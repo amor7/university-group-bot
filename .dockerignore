@@ -1,0 +1,15 @@
+.git
+.venv
+.env
+.env.*
+*.db*
+data/
+backups/
+logs/
+tests/
+docs/
+.claude/
+*.xlsx
+*.xlsm
+*.csv
+__pycache__/

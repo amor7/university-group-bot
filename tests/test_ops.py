@@ -51,7 +51,9 @@ def test_startup_backup(repo, tmp_path):
 def test_run_bot_bat():
     bat = (PROJECT_ROOT / "run_bot.bat").read_text(encoding="utf-8")
     assert 'cd /d "%~dp0"' in bat and r".venv\Scripts\python.exe" in bat
-    assert "timeout /t 10" in bat and "goto loop" in bat and "-m bot.main" in bat
+    # ping, not timeout: timeout fails without a console (Task Scheduler as SYSTEM)
+    assert "ping -n 11 127.0.0.1" in bat and "timeout /t" not in bat
+    assert "goto loop" in bat and "-m bot.main" in bat and r"logs\stdout.log" in bat
 
 
 def test_pytest_only_in_dev_requirements():

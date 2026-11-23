@@ -1,0 +1,16 @@
+# docker compose up -d --build   → runs 24/7 and comes back after a reboot or crash.
+services:
+  bot:
+    build: .
+    container_name: student-bot
+    restart: unless-stopped
+    init: true
+    env_file: .env
+    environment:
+      DB_PATH: /app/data/bot.db
+    volumes:
+      - ./data:/app/data
+      - ./logs:/app/logs
+    # lets PROXY_URL=socks5://host.docker.internal:1080 reach a proxy running on the host
+    extra_hosts:
+      - "host.docker.internal:host-gateway"

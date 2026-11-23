@@ -83,8 +83,11 @@ async def _close_db(app: Application) -> None:
 
 def build_application(config: Config) -> Application:
     # concurrent_updates stays off: one SQLite connection, updates handled one at a time.
-    app = (ApplicationBuilder().token(config.bot_token)
-           .post_init(_post_init).post_shutdown(_close_db).build())
+    builder = (ApplicationBuilder().token(config.bot_token)
+               .post_init(_post_init).post_shutdown(_close_db))
+    if config.proxy_url:  # e.g. a server where api.telegram.org is blocked
+        builder = builder.proxy(config.proxy_url).get_updates_proxy(config.proxy_url)
+    app = builder.build()
     app.bot_data[admin.CONFIG_KEY] = config
     app.bot_data[admin.REPO_KEY] = Repo(connect(config.db_path))
     register_handlers(app, config)

@@ -55,3 +55,37 @@ def test_env_read_from_project_root_not_cwd(tmp_path, monkeypatch):
     monkeypatch.chdir(cwd)
     cfg = load_config()
     assert cfg.bot_token == "a:b" and cfg.db_path == str(root / "data.db")
+
+
+def test_group_id_tolerates_copied_label():
+    from bot.config import parse_group_id
+    assert parse_group_id("ID: -1004321133862") == -1004321133862
+    assert parse_group_id("id:-100123") == -100123
+    assert parse_group_id(" -100123 ") == -100123
+    assert parse_group_id("") is None
+
+
+def test_group_id_rejects_garbage():
+    import pytest
+    from bot.config import ConfigError, parse_group_id
+    with pytest.raises(ConfigError):
+        parse_group_id("my group")
+
+
+def test_proxy_url_validation():
+    import pytest
+    from bot.config import ConfigError, parse_proxy_url
+    assert parse_proxy_url("") is None
+    assert parse_proxy_url("socks5://127.0.0.1:1080") == "socks5://127.0.0.1:1080"
+    assert parse_proxy_url("http://u:p@proxy:8080") == "http://u:p@proxy:8080"
+    with pytest.raises(ConfigError):
+        parse_proxy_url("127.0.0.1:1080")
+
+
+def test_build_application_with_proxy():
+    from bot.config import Config
+    from bot.main import build_application
+    cfg = Config(bot_token="123:abc", admin_ids=frozenset(), db_path=":memory:",
+                 group_id=None, proxy_url="socks5://127.0.0.1:1080")
+    app = build_application(cfg)
+    assert app is not None
