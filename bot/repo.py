@@ -42,7 +42,7 @@ class Repo:
     def ensure_group(self, chat_id: int, title: str | None = None) -> Row:
         with self.conn:
             self.conn.execute(
-                "INSERT INTO groups (chat_id, title) VALUES (?, ?) "
+                "INSERT INTO groups (chat_id, title, deadline_hours) VALUES (?, ?, 0) "
                 "ON CONFLICT(chat_id) DO UPDATE SET title = COALESCE(excluded.title, title)",
                 (chat_id, title),
             )
@@ -321,6 +321,11 @@ class Repo:
                 "WHERE chat_id = ? AND status = 'pending' AND deadline_at IS NOT NULL",
                 (chat_id,))
         return cur.rowcount
+
+    def count_pending_without_deadline(self, chat_id: int) -> int:
+        return self.conn.execute(
+            "SELECT COUNT(*) FROM members WHERE chat_id = ? AND status = 'pending' "
+            "AND deadline_at IS NULL", (chat_id,)).fetchone()[0]
 
     def fill_pending_deadlines(self, chat_id: int, deadline_at: int) -> int:
         """Kick turned (back) on: pending members without a deadline get `deadline_at`.

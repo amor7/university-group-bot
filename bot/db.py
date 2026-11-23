@@ -78,6 +78,14 @@ MIGRATIONS: list[str] = [
     """
     ALTER TABLE members ADD COLUMN unban_pending INTEGER NOT NULL DEFAULT 0;
     """,
+    # v3: removing unregistered members is opt-in (off by default). The old default was 24 hours;
+    # groups still on it are switched off and pending members lose their deadline.
+    """
+    UPDATE members SET deadline_at = NULL
+     WHERE status = 'pending'
+       AND chat_id IN (SELECT chat_id FROM groups WHERE deadline_hours = 24);
+    UPDATE groups SET deadline_hours = 0 WHERE deadline_hours = 24;
+    """,
 ]
 
 SCHEMA_VERSION = len(MIGRATIONS)

@@ -11,7 +11,7 @@ ROWS = [("۴۰۰۱۱۱۲۲۲", "نام آزمایشی یک"), ("40011122233", "�
 
 def test_group_settings(repo):
     g = repo.ensure_group(CHAT, "G")
-    assert (g["deadline_hours"], g["max_attempts"], g["lock_minutes"]) == (24, 5, 60)
+    assert (g["deadline_hours"], g["max_attempts"], g["lock_minutes"]) == (0, 5, 60)  # removal off by default
     repo.update_group_setting(CHAT, "max_attempts", 3)
     assert repo.get_group(CHAT)["max_attempts"] == 3
     assert repo.ensure_group(CHAT)["title"] == "G"  # None title does not overwrite

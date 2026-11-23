@@ -22,7 +22,7 @@ class VerifyStatus(enum.Enum):
 
 @dataclass(frozen=True)
 class GroupSettings:
-    deadline_hours: int = 24
+    deadline_hours: int = 0  # 0 = never remove; admins opt in with /set_deadline
     max_attempts: int = 5
     lock_minutes: int = 60
     contact_text: str | None = None

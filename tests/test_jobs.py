@@ -12,6 +12,13 @@ from bot.jobs import cleanup_due, kick_due, pick_kicks, retry_unbans, should_kic
 from tests.conftest import CHAT
 
 
+@pytest.fixture(autouse=True)
+def _removal_on(repo):
+    """Automatic removal is off by default; these tests are about the sweeper with it on."""
+    repo.ensure_group(CHAT)
+    repo.update_group_setting(CHAT, "deadline_hours", 24)
+
+
 def test_should_kick():
     assert should_kick({"status": "pending", "deadline_at": 100}, False, 100)
     assert not should_kick({"status": "pending", "deadline_at": 101}, False, 100)

@@ -71,6 +71,8 @@ def run(coro):
 
 # ---------- group gate ----------
 def test_gate_unverified_deletes_restricts_registers_and_guides_once(repo):
+    repo.ensure_group(CHAT)
+    repo.update_group_setting(CHAT, "deadline_hours", 24)  # removal is opt-in
     ctx = make_context(repo)
     u = tg_user()
     upd = group_update(u)

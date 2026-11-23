@@ -12,6 +12,7 @@ from __future__ import annotations
 import enum
 import logging
 import re
+import secrets
 import time
 from dataclasses import dataclass
 from typing import Any
@@ -19,13 +20,15 @@ from typing import Any
 from telegram import BotCommand, BotCommandScopeChat, BotCommandScopeDefault, Update
 from telegram.constants import ChatType, ParseMode
 from telegram.error import TelegramError
-from telegram.ext import Application, CommandHandler, ContextTypes, MessageHandler, filters
+from telegram.ext import (
+    Application, CallbackQueryHandler, CommandHandler, ContextTypes, MessageHandler, filters,
+)
 
 from bot import texts
 from bot.actions import notify, report_targets
 from bot.config import Config
 from bot.handlers.admin import (
-    CONFIG_KEY, PRIVATE, REPO_KEY, Ctx, _command_body, _guard, _revoke_in_background,
+    CONFIG_KEY, PRIVATE, REPO_KEY, Ctx, _command_body, _guard, _keyboard, _revoke_in_background,
     is_bot_admin,
 )
 from bot.handlers.private import admit
@@ -36,6 +39,7 @@ from bot.verify import load_settings, looks_like_code, pending_deadline
 log = logging.getLogger(__name__)
 
 DEADLINE_MAX_HOURS = 720
+PENDING_DEADLINE = "pending_deadline"  # user_data key: a /set_deadline waiting for confirmation
 ATTEMPTS_RANGE = (1, 20)
 LOCK_MINUTES_RANGE = (1, 7 * 24 * 60)
 CONTACT_MAX_LEN = 1000
@@ -474,13 +478,54 @@ async def cmd_set_deadline(update: Update, context: ContextTypes.DEFAULT_TYPE) -
     except UsageError as e:
         await _reply(update, str(e), html=True)
         return
+    if hours == 0:
+        await _apply_deadline(update, context, c, 0)
+        return
+    # Removing members is opt-in: explain what happens and wait for an explicit "yes".
+    token = secrets.token_hex(4)
+    context.user_data[PENDING_DEADLINE] = {"token": token, "chat_id": c.group_id, "hours": hours}
+    await update.effective_message.reply_text(
+        texts.deadline_confirm(hours, c.repo.count_pending_without_deadline(c.group_id)),
+        parse_mode=ParseMode.HTML,
+        reply_markup=_keyboard((texts.BTN_DEADLINE_YES, f"ddl:yes:{token}"),
+                               (texts.BTN_CANCEL, f"ddl:no:{token}")),
+    )
+
+
+async def on_deadline_choice(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    query = update.callback_query
+    if update.effective_chat is None or update.effective_chat.type != ChatType.PRIVATE:
+        await query.answer()
+        return
+    c = await _guard(update, context)  # answers the query itself when it refuses
+    if c is None:
+        return
+    _, action, token = (query.data.split(":") + ["", "", ""])[:3]
+    pending = context.user_data.get(PENDING_DEADLINE)
+    if not pending or pending["token"] != token or pending["chat_id"] != c.group_id:
+        await query.answer(texts.EXPIRED, show_alert=True)
+        await query.edit_message_reply_markup(None)
+        return
+    context.user_data.pop(PENDING_DEADLINE, None)
+    await query.answer()
+    if action != "yes":
+        await query.edit_message_text(texts.DEADLINE_CANCELLED)
+        return
+    await _apply_deadline(update, context, c, pending["hours"])
+
+
+async def _apply_deadline(update: Update, context: ContextTypes.DEFAULT_TYPE, c: Ctx,
+                          hours: int) -> None:
     c.repo.update_group_setting(c.group_id, "deadline_hours", hours)
     if hours == 0:
         changed = c.repo.clear_pending_deadlines(c.group_id)
     else:
         changed = c.repo.fill_pending_deadlines(c.group_id, pending_deadline(hours, now()))
     text = texts.deadline_set(hours, changed)
-    await _reply(update, text)
+    if update.callback_query is not None:  # confirmed with the button: show it in that message
+        await update.callback_query.edit_message_text(text)
+    else:
+        await _reply(update, text)
     await _audit(update, context, c, "set_deadline", {"hours": hours, "members": changed}, text)
 
 
@@ -697,6 +742,7 @@ def register(app: Application) -> None:
         ("remove_admin", cmd_remove_admin), ("admins", cmd_admins), ("logs", cmd_logs),
     ):
         app.add_handler(CommandHandler(name, callback, filters=PRIVATE))
+    app.add_handler(CallbackQueryHandler(on_deadline_choice, pattern=r"^ddl:"))
     app.add_handler(CommandHandler("set_report", cmd_set_report_in_group, filters=GROUP_MESSAGES))
     app.add_handler(MessageHandler(filters.UpdateType.CHANNEL_POST & filters.TEXT,
                                    on_channel_set_report))
