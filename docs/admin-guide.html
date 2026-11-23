@@ -1,0 +1,472 @@
+<title>راهنمای ادمین ربات دانشجویان</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;500;700;800&family=JetBrains+Mono:wght@500&display=swap">
+<style>
+/* Layout: one readable RTL column; each task = a section with chat-style examples (admin bubble → bot bubble) */
+:root {
+  --bg: #f6f7f5;
+  --surface: #ffffff;
+  --fg: #1c2622;
+  --muted: #5d6b65;
+  --line: #dde3df;
+  --accent: #1f6b55;
+  --accent-soft: #e3f0ea;
+  --me: #dff3e7;
+  --bot: #ffffff;
+  --warn: #9a5b00;
+  --warn-soft: #fbf0dc;
+  --danger: #a33a2a;
+  --danger-soft: #f8e3df;
+  --code-bg: #eef1ef;
+  --font-body: "Vazirmatn", Tahoma, "Segoe UI", sans-serif;
+  --font-mono: "JetBrains Mono", Consolas, "Courier New", monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #121816; --surface: #1a2220; --fg: #e4ece8; --muted: #9aaba4; --line: #2c3834;
+    --accent: #5fc39f; --accent-soft: #1d3a30; --me: #1f3d31; --bot: #222c29;
+    --warn: #e6b25c; --warn-soft: #3a2e17; --danger: #f08b7a; --danger-soft: #3d2320; --code-bg: #24302c;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #121816; --surface: #1a2220; --fg: #e4ece8; --muted: #9aaba4; --line: #2c3834;
+  --accent: #5fc39f; --accent-soft: #1d3a30; --me: #1f3d31; --bot: #222c29;
+  --warn: #e6b25c; --warn-soft: #3a2e17; --danger: #f08b7a; --danger-soft: #3d2320; --code-bg: #24302c;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body {
+  background: var(--bg); color: var(--fg);
+  font-family: var(--font-body); font-size: 16px; line-height: 1.9;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  padding-block: 0 4rem;
+}
+.wrap { max-width: 760px; margin: 0 auto; }
+header.top { padding-block: 2.5rem 1.5rem; border-bottom: 1px solid var(--line); margin-bottom: 1.5rem; }
+.eyebrow { color: var(--accent); font-weight: 700; font-size: .85rem; letter-spacing: .02em; }
+h1 { font-size: clamp(1.7rem, 4.5vw, 2.3rem); line-height: 1.4; margin: .3rem 0 .6rem; font-weight: 800; text-wrap: balance; }
+h2 { font-size: 1.35rem; margin: 0 0 .6rem; line-height: 1.5; text-wrap: balance; font-weight: 800; }
+h3 { font-size: 1.05rem; margin: 1.4rem 0 .4rem; font-weight: 700; }
+p { margin: .5rem 0; }
+.lead { color: var(--muted); font-size: 1.05rem; }
+section { padding-block: 1.8rem; border-bottom: 1px solid var(--line); scroll-margin-top: 1rem; }
+section:last-of-type { border-bottom: 0; }
+.step { display: inline-flex; align-items: center; justify-content: center; min-width: 2rem; height: 2rem; border-radius: 50%;
+  background: var(--accent); color: var(--bg); font-weight: 800; margin-left: .5rem; font-size: .95rem; vertical-align: middle; }
+ul, ol { padding-right: 1.3rem; padding-left: 0; margin: .4rem 0; }
+li { margin: .25rem 0; }
+code, .cmd { font-family: var(--font-mono); font-size: .88em; background: var(--code-bg); padding: .1em .4em; border-radius: 5px; direction: ltr; unicode-bidi: isolate; white-space: nowrap; }
+.toc { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 1rem 1.2rem; }
+.toc ol { columns: 2; column-gap: 2rem; margin: 0; }
+@media (max-width: 560px) { .toc ol { columns: 1; } }
+.toc a { color: var(--fg); text-decoration: none; border-bottom: 1px dotted var(--muted); }
+.toc a:hover, .toc a:focus-visible { color: var(--accent); }
+a:focus-visible, button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+/* chat example */
+.chat { background: var(--accent-soft); border-radius: 14px; padding: .9rem; margin: .9rem 0; display: flex; flex-direction: column; gap: .55rem; }
+.chat-title { font-size: .8rem; color: var(--muted); font-weight: 700; }
+.msg { max-width: 92%; padding: .55rem .8rem; border-radius: 12px; white-space: pre-wrap; line-height: 1.8; min-width: 0; overflow-wrap: anywhere; font-size: .95rem; }
+.msg.me { background: var(--me); align-self: flex-start; border-top-right-radius: 3px; }
+.msg.bot { background: var(--bot); align-self: flex-end; border-top-left-radius: 3px; border: 1px solid var(--line); }
+.msg .who { display: block; font-size: .75rem; font-weight: 700; color: var(--accent); margin-bottom: .1rem; }
+.msg.me .ltr { direction: ltr; unicode-bidi: isolate; display: block; text-align: left; font-family: var(--font-mono); font-size: .9rem; }
+.btns { display: flex; flex-wrap: wrap; gap: .4rem; margin-top: .4rem; }
+.btns span { border: 1px solid var(--accent); color: var(--accent); border-radius: 8px; padding: .1rem .6rem; font-size: .85rem; font-weight: 500; }
+
+/* copyable command */
+.copy { display: flex; align-items: center; gap: .5rem; background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: .45rem .6rem; margin: .5rem 0; }
+.copy pre { margin: 0; flex: 1; min-width: 0; overflow-x: auto; direction: ltr; text-align: left; font-family: var(--font-mono); font-size: .9rem; white-space: pre; }
+.copy button { font-family: var(--font-body); font-size: .8rem; border: 1px solid var(--line); background: var(--bg); color: var(--fg); border-radius: 7px; padding: .2rem .6rem; cursor: pointer; flex: none; }
+.copy button:hover { border-color: var(--accent); color: var(--accent); }
+
+.note { border-radius: 10px; padding: .7rem .9rem; margin: .8rem 0; font-size: .95rem; }
+.note.tip { background: var(--accent-soft); }
+.note.warn { background: var(--warn-soft); }
+.note.danger { background: var(--danger-soft); }
+.note b:first-child { margin-left: .3rem; }
+.note.warn b:first-child { color: var(--warn); }
+.note.danger b:first-child { color: var(--danger); }
+.note.tip b:first-child { color: var(--accent); }
+
+.table-box { overflow-x: auto; margin: .8rem 0; border: 1px solid var(--line); border-radius: 10px; background: var(--surface); }
+table { border-collapse: collapse; width: 100%; font-size: .92rem; }
+th, td { text-align: right; padding: .5rem .7rem; border-bottom: 1px solid var(--line); vertical-align: top; }
+tr:last-child td { border-bottom: 0; }
+th { background: var(--code-bg); font-weight: 700; white-space: nowrap; }
+td code { white-space: nowrap; }
+table.sheet td, table.sheet th { font-family: var(--font-mono); font-size: .85rem; }
+table.sheet td:first-child, table.sheet th:first-child { color: var(--muted); width: 2.5rem; text-align: center; }
+.tag { display: inline-block; font-size: .75rem; padding: 0 .45rem; border-radius: 6px; font-weight: 700; }
+.tag.ok { background: var(--accent-soft); color: var(--accent); }
+.tag.no { background: var(--danger-soft); color: var(--danger); }
+.grid2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: .8rem; margin: .8rem 0; }
+.grid2 > div { min-width: 0; }
+footer { color: var(--muted); font-size: .85rem; padding-top: 1.5rem; }
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+</style>
+
+<div class="wrap" dir="rtl" lang="fa">
+<header class="top">
+  <div class="eyebrow">راهنمای ادمین · ربات احراز هویت دانشجویان</div>
+  <h1>از صفر تا صد مدیریت ربات گروه</h1>
+  <p class="lead">این راهنما برای کسی است که ادمین ربات شده و می‌خواهد لیست دانشجوها را وارد کند، مشکل دانشجوها را حل کند و تنظیمات را تغییر دهد. همه‌ی کارها در <b>پیوی ربات</b> انجام می‌شود و لازم نیست به سرور دست بزنید.</p>
+</header>
+
+<nav class="toc" aria-label="فهرست">
+  <ol>
+    <li><a href="#how">ربات چه کار می‌کند</a></li>
+    <li><a href="#start">شروع کار ادمین</a></li>
+    <li><a href="#file">وارد کردن لیست با فایل Excel</a></li>
+    <li><a href="#text">افزودن و حذف دستی کد</a></li>
+    <li><a href="#problems">حل مشکل دانشجوها</a></li>
+    <li><a href="#reports">آمار، گزارش و خروجی</a></li>
+    <li><a href="#settings">تنظیمات</a></li>
+    <li><a href="#admins">مدیریت ادمین‌ها</a></li>
+    <li><a href="#danger">بکاپ و پاک کردن لیست</a></li>
+    <li><a href="#all">خلاصه‌ی همه‌ی دستورها</a></li>
+    <li><a href="#faq">سؤال‌های رایج</a></li>
+  </ol>
+</nav>
+
+<section id="how">
+  <h2>۱. ربات چه کار می‌کند</h2>
+  <p>ربات ادمین گروه است و فقط به دانشجوهایی اجازه‌ی پیام دادن می‌دهد که کد دانشجویی معتبرشان را ثبت کرده باشند. مسیر دانشجو این است:</p>
+  <ol>
+    <li>دانشجو وارد گروه می‌شود یا پیام می‌دهد. اگر ثبت نکرده باشد، پیامش پاک می‌شود و دیگر نمی‌تواند بنویسد.</li>
+    <li>ربات در گروه یک پیام با دکمه‌ی <b>«🎓 ثبت کد دانشجویی»</b> می‌فرستد. این پیام ۳ دقیقه بعد خودش پاک می‌شود.</li>
+    <li>دانشجو دکمه را می‌زند، وارد پیوی ربات می‌شود و کد دانشجویی‌اش را می‌فرستد.</li>
+    <li>اگر کد در لیست باشد و کس دیگری با آن ثبت نکرده باشد، ثبت انجام می‌شود و دانشجو می‌تواند در گروه بنویسد.</li>
+  </ol>
+  <div class="chat" aria-label="نمونه‌ی گفتگوی دانشجو با ربات">
+    <div class="chat-title">نمونه: پیوی دانشجو با ربات</div>
+    <div class="msg me"><span class="who">دانشجو</span>۴۰۰۱۱۱۲۲۲</div>
+    <div class="msg bot"><span class="who">ربات</span>✅ کد ۴۰۰۱۱۱۲۲۲ ثبت شد. حالا می‌توانید در گروه پیام بدهید.<div class="btns"><span>ورود به گروه</span></div></div>
+  </div>
+  <div class="grid2">
+    <div class="note tip"><b>قانون‌ها:</b> هر کد فقط به یک اکانت تلگرام وصل می‌شود. فقط کد دانشجویی پرسیده می‌شود، نه نام.</div>
+    <div class="note warn"><b>پیش‌فرض‌ها:</b> بعد از ۵ تلاش اشتباه، اکانت ۶۰ دقیقه قفل می‌شود. کسی که تا ۲۴ ساعت ثبت نکند از گروه بیرون می‌رود و می‌تواند دوباره بیاید.</div>
+  </div>
+  <p>ادمین‌های گروه و پیام‌هایی که به اسم خود گروه یا کانال متصل فرستاده می‌شوند از این قانون معاف‌اند.</p>
+</section>
+
+<section id="start">
+  <h2>۲. شروع کار ادمین</h2>
+  <p><span class="step">۱</span>ربات را در تلگرام باز کنید و <code>/start</code> را بزنید.</p>
+  <p><span class="step">۲</span><code>/help</code> را بفرستید. اگر ادمین باشید، لیست کامل دستورها را می‌بینید. اگر فقط راهنمای کوتاه دانشجو را دیدید، یعنی هنوز ادمین نیستید و باید از ادمین اصلی بخواهید شما را اضافه کند (بخش <a href="#admins">۸</a>).</p>
+  <div class="note tip"><b>نکته:</b> دستورهای ادمین فقط در <b>پیوی ربات</b> کار می‌کنند. اگر داخل گروه بزنید، ربات جواب نمی‌دهد.</div>
+  <h3>اولین کارها به ترتیب</h3>
+  <ol>
+    <li>لیست دانشجوها را وارد کنید (بخش <a href="#file">۳</a>).</li>
+    <li>متن پیامی را که دانشجو در صورت پیدا نشدن کدش می‌بیند تنظیم کنید: <code>/set_contact</code> (بخش <a href="#settings">۷</a>).</li>
+    <li>با <code>/stats</code> مطمئن شوید که لیست درست وارد شده است.</li>
+  </ol>
+</section>
+
+<section id="file">
+  <h2>۳. وارد کردن لیست با فایل Excel</h2>
+  <p>برای لیست کامل، بهترین راه فایل است. فایل را مثل یک سند معمولی در پیوی ربات <b>بفرستید</b>. دستور خاصی لازم نیست.</p>
+  <ul>
+    <li>فرمت‌های قابل قبول: <code>.xlsx</code>، <code>.xlsm</code>، <code>.csv</code> و <code>.txt</code></li>
+    <li>حداکثر حجم: ۱۰ مگابایت</li>
+    <li>کد فقط عدد باشد، بین ۶ تا ۱۵ رقم. اعداد فارسی هم قبول است.</li>
+  </ul>
+
+  <h3>سه شکل درست برای فایل</h3>
+  <p>ربات ستون‌ها را از روی <b>سطر اول</b> (عنوان ستون‌ها) پیدا می‌کند. هر سه حالت زیر قبول است:</p>
+
+  <div class="grid2">
+    <div>
+      <b>حالت ۱: فقط کد</b>
+      <div class="table-box"><table class="sheet"><thead><tr><th></th><th>A</th></tr></thead><tbody>
+        <tr><td>1</td><td>شماره دانشجویی</td></tr>
+        <tr><td>2</td><td>4001112223</td></tr>
+        <tr><td>3</td><td>4001112224</td></tr>
+        <tr><td>4</td><td>990211005</td></tr>
+      </tbody></table></div>
+    </div>
+    <div>
+      <b>حالت ۲: کد + نام کامل</b>
+      <div class="table-box"><table class="sheet"><thead><tr><th></th><th>A</th><th>B</th></tr></thead><tbody>
+        <tr><td>1</td><td>شماره دانشجویی</td><td>نام و نام خانوادگی</td></tr>
+        <tr><td>2</td><td>4001112223</td><td>رضایی - علی</td></tr>
+        <tr><td>3</td><td>4001112224</td><td>محمدی - سارا</td></tr>
+      </tbody></table></div>
+    </div>
+  </div>
+  <b>حالت ۳: کد + نام و نام خانوادگی در ستون‌های جدا</b>
+  <div class="table-box"><table class="sheet"><thead><tr><th></th><th>A</th><th>B</th><th>C</th></tr></thead><tbody>
+    <tr><td>1</td><td>کد دانشجویی</td><td>نام</td><td>نام خانوادگی</td></tr>
+    <tr><td>2</td><td>4001112223</td><td>علی</td><td>رضایی</td></tr>
+    <tr><td>3</td><td>4001112224</td><td>سارا</td><td>محمدی</td></tr>
+  </tbody></table></div>
+  <p>عنوان‌های دیگری که ربات برای ستون کد می‌شناسد: «شماره دانشجو»، «کد دانشجو»، <code>student_id</code>، <code>code</code> و <code>id</code>. نوشتن با «ي» عربی یا با خط زیر (مثل <code>شماره_دانشجويي</code>) هم مشکلی ندارد. ترتیب ستون‌ها مهم نیست.</p>
+  <div class="note tip"><b>بدون سطر عنوان:</b> اگر فایل سطر عنوان ندارد، فقط کافی است <b>ستون اول کدها باشد</b>.</div>
+  <div class="note warn"><b>صفر اول کد:</b> اگر کدی با صفر شروع می‌شود، در Excel ستون کد را روی قالب <b>Text</b> بگذارید. وگرنه Excel صفر اول را حذف می‌کند.</div>
+
+  <h3>پیش‌نمایش و انتخاب</h3>
+  <p>ربات قبل از هر تغییری یک پیش‌نمایش نشان می‌دهد:</p>
+  <div class="chat">
+    <div class="chat-title">نمونه: بعد از فرستادن فایل</div>
+    <div class="msg me"><span class="who">ادمین</span>📎 students-1405.xlsx</div>
+    <div class="msg bot"><span class="who">ربات</span>📄 فایل «students-1405.xlsx» خوانده شد.
+✅ کد معتبر: ۵۲۲
+🆕 جدید نسبت به لیست فعلی: ۵۲۲
+📋 لیست فعلی: ۰ کد
+⚠️ ردیف خراب: ۱
+  • ردیف ۴۱: «۴۰۰-۱۱۲» (فقط رقم مجاز است)
+ℹ️ طول کدها یکسان نیست: ۵۰۲ کد ۱۱رقمی، ۲۰ کد ۹رقمی
+
+چه کنم؟<div class="btns"><span>➕ افزودن به لیست</span><span>🔄 جایگزینی کامل</span><span>❌ لغو</span></div></div>
+  </div>
+  <div class="table-box"><table>
+    <thead><tr><th>دکمه</th><th>چه می‌کند</th><th>کی استفاده کنیم</th></tr></thead>
+    <tbody>
+      <tr><td>➕ افزودن به لیست</td><td>فقط کدهای جدید اضافه می‌شوند و چیزی پاک نمی‌شود.</td><td>بار اول، یا اضافه کردن ورودی‌های جدید</td></tr>
+      <tr><td>🔄 جایگزینی کامل</td><td>لیست قبلی کامل با این فایل عوض می‌شود. کدی که در فایل نباشد حذف می‌شود و دانشجویی که با آن کد ثبت کرده بود در گروه <b>محدود</b> می‌شود. قبلش خودکار بکاپ گرفته می‌شود.</td><td>شروع ترم جدید با لیست کامل دانشجوهای فعال</td></tr>
+      <tr><td>❌ لغو</td><td>هیچ تغییری انجام نمی‌شود.</td><td>اگر پیش‌نمایش اشتباه به نظر می‌رسد</td></tr>
+    </tbody>
+  </table></div>
+  <div class="note danger"><b>احتیاط:</b> قبل از «جایگزینی کامل» خط آخر پیش‌نمایش را بخوانید. مثلاً اگر نوشته «۸۰ کد از لیست حذف می‌شود و ۱۲ نفرِ ثبت‌شده محدود می‌شوند»، مطمئن شوید همین را می‌خواهید.</div>
+  <p>ردیف‌های خراب (مثلاً کدی که حرف یا خط تیره دارد) وارد نمی‌شوند و بقیه‌ی ردیف‌ها مشکلی پیدا نمی‌کنند. می‌توانید آن ردیف‌ها را بعداً درست کنید و با <code>/add</code> اضافه کنید.</p>
+</section>
+
+<section id="text">
+  <h2>۴. افزودن و حذف دستی کد</h2>
+  <h3>افزودن: <code>/add</code></h3>
+  <p>برای چند کد، لازم نیست فایل بسازید. کدها را بعد از دستور بنویسید، با فاصله، کاما یا هر کد در یک خط:</p>
+  <div class="copy"><pre>/add 4001112223 4001112224 990211005</pre><button type="button">کپی</button></div>
+  <p>اگر می‌خواهید نام هم ثبت شود، در هر خط <b>یک کد و بعد نام</b> را بنویسید:</p>
+  <div class="copy"><pre>/add
+4001112223 رضایی - علی
+4001112224 محمدی - سارا
+990211005</pre><button type="button">کپی</button></div>
+  <div class="chat">
+    <div class="msg bot"><span class="who">ربات</span>✅ اضافه شد: ۲
+📋 از قبل بود: ۹۹۰۲۱۱۰۰۵</div>
+  </div>
+  <div class="note warn"><b>دقت کنید:</b> در هر خط فقط یک کد همراه نام بنویسید. اگر بعد از نام کد دیگری در همان خط بیاید، جزو نام خوانده می‌شود. هر پیام تلگرام حدود ۳۰۰ کد جا دارد؛ برای بیشتر از این از فایل استفاده کنید.</div>
+
+  <h3>حذف: <code>/remove</code></h3>
+  <div class="copy"><pre>/remove 4001112223 4001112224</pre><button type="button">کپی</button></div>
+  <div class="chat">
+    <div class="msg bot"><span class="who">ربات</span>🗑 حذف شد: ۱ (۴۰۰۱۱۱۲۲۲۳)
+❓ در لیست نبود: ۴۰۰۱۱۱۲۲۲۴
+🚫 ثبت ۱ نفر لغو شد و در گروه محدود می‌شوند: ‎@ali_rz</div>
+  </div>
+  <p>اگر کسی با کد حذف‌شده ثبت کرده بود، ثبتش لغو می‌شود و دیگر نمی‌تواند در گروه بنویسد. از گروه بیرون نمی‌رود.</p>
+</section>
+
+<section id="problems">
+  <h2>۵. حل مشکل دانشجوها</h2>
+  <p>بیشتر کار روزمره‌ی ادمین همین بخش است. برای هر مشکل، اول با <code>/whois</code> وضعیت را ببینید.</p>
+
+  <h3>دیدن وضعیت یک دانشجو: <code>/whois</code></h3>
+  <p>می‌توانید با کد دانشجویی، یوزرنیم یا آیدی عددی جستجو کنید:</p>
+  <div class="copy"><pre>/whois 4001112223</pre><button type="button">کپی</button></div>
+  <div class="copy"><pre>/whois @ali_rz</pre><button type="button">کپی</button></div>
+  <p>ربات نشان می‌دهد: این کد در لیست هست یا نه، چه اکانتی با آن ثبت کرده و کی، وضعیت عضو در گروه، و اینکه قفل است یا نه. <b>آیدی عددی</b> (user_id) را هم از همین‌جا یا از پیام گزارش ثبت پیدا کنید.</p>
+
+  <h3>سناریوی الف: «کدم پیدا نشد»</h3>
+  <p>یعنی دانشجو پیام «این کد در لیست دانشجویان پیدا نشد» را دیده است.</p>
+  <ol>
+    <li>بررسی کنید دانشجو واقعاً فعال است. شاید کد را اشتباه تایپ کرده.</li>
+    <li>اگر دانشجوی جدید است، کدش را اضافه کنید و بگویید دوباره بفرستد:
+      <div class="copy"><pre>/add 4031115007 کریمی - نگار</pre><button type="button">کپی</button></div></li>
+  </ol>
+
+  <h3>سناریوی ب: «کد من را کس دیگری ثبت کرده»</h3>
+  <p>دانشجو پیام «این کد قبلاً با حساب دیگری ثبت شده است» را دیده است. ممکن است دانشجو اکانتش را عوض کرده باشد، یا کسی کد او را حدس زده و ثبت کرده باشد.</p>
+  <ol>
+    <li>ببینید چه کسی با این کد ثبت کرده: <code>/whois 4001112223</code></li>
+    <li>بعد از اطمینان از اینکه کد مال این دانشجوست، ثبت قبلی را آزاد کنید:
+      <div class="copy"><pre>/unbind 4001112223</pre><button type="button">کپی</button></div>
+      اکانت قبلی در گروه محدود می‌شود و ربات به او پیام می‌دهد که دوباره ثبت کند.</li>
+    <li>حالا دانشجوی اصلی کدش را دوباره بفرستد. یا خودتان او را مستقیم وصل کنید (سناریوی د).</li>
+  </ol>
+
+  <h3>سناریوی ج: «قفل شدم»</h3>
+  <p>بعد از ۵ تلاش اشتباه، دانشجو ۶۰ دقیقه نمی‌تواند کد بفرستد. ربات در گزارش قفل آیدی عددی‌اش را برای ادمین‌ها می‌فرستد:</p>
+  <div class="chat">
+    <div class="msg bot"><span class="who">ربات</span>🔒 ‎@ali_rz (Ali) (id 123456789) بعد از تلاش‌های ناموفق برای ۶۰ دقیقه قفل شد.
+آخرین کد امتحان‌شده: ۴۰۰۱۱۱۲۲۹۹</div>
+  </div>
+  <p>برای باز کردن زودتر قفل، از همان آیدی عددی استفاده کنید:</p>
+  <div class="copy"><pre>/unlock 123456789</pre><button type="button">کپی</button></div>
+  <div class="note tip"><b>نکته:</b> <code>/unlock @username</code> فقط برای کسی کار می‌کند که قبلاً ثبت کرده باشد. کسی که قفل شده معمولاً هنوز ثبت نکرده، پس آیدی عددی مطمئن‌تر است.</div>
+
+  <h3>سناریوی د: وصل کردن دستی یک اکانت به کد</h3>
+  <p>اگر دانشجو کار با ربات را بلد نیست یا می‌خواهید خودتان کار را تمام کنید:</p>
+  <div class="copy"><pre>/verify_user 123456789 4001112223</pre><button type="button">کپی</button></div>
+  <ul>
+    <li>عدد اول <b>آیدی عددی</b> تلگرام دانشجو است، نه یوزرنیمش.</li>
+    <li>اگر کد در لیست نباشد، خودکار اضافه می‌شود.</li>
+    <li>اگر کد به اکانت دیگری وصل باشد، ربات خطا می‌دهد. اول با <code>/unbind</code> آزادش کنید.</li>
+  </ul>
+  <div class="note tip"><b>آیدی عددی را از کجا پیدا کنم؟</b> دانشجو می‌تواند به ربات <code>@userinfobot</code> پیام بدهد و عددی را که می‌گیرد برای شما بفرستد. اگر دانشجو قبلاً تلاش کرده باشد، آیدی‌اش در گزارش قفل هم هست.</div>
+
+  <h3>سناریوی هـ: «ثبت کردم ولی هنوز نمی‌توانم بنویسم»</h3>
+  <p>به دانشجو بگویید در پیوی ربات <code>/start</code> را بزند. ربات دوباره محدودیتش را برمی‌دارد. اگر درست نشد، با <code>/whois</code> وضعیتش را ببینید. اگر از گروه <b>بن</b> شده باشد، ربات عمداً او را برنمی‌گرداند و باید یکی از ادمین‌های گروه دستی بنش را بردارد.</p>
+</section>
+
+<section id="reports">
+  <h2>۶. آمار، گزارش و خروجی</h2>
+  <h3>آمار کلی: <code>/stats</code></h3>
+  <div class="chat">
+    <div class="msg me"><span class="who">ادمین</span><span class="ltr">/stats</span></div>
+    <div class="msg bot"><span class="who">ربات</span>📊 آمار
+🎓 دانشجوهای لیست: ۵۲۲
+✅ ثبت‌شده: ۳۴۱ (۶۵.۳٪)
+⏳ ثبت‌نشده‌های لیست: ۱۸۱
+👥 در انتظار ثبت در گروه (pending): ۲۷
+🚫 لغوشده (revoked): ۳
+🔒 قفل‌شده در این لحظه: ۱</div>
+  </div>
+  <p>«در انتظار ثبت» یعنی افرادی که در گروه هستند ولی هنوز کدشان را ثبت نکرده‌اند.</p>
+
+  <h3>خروجی Excel: <code>/export</code></h3>
+  <p>یک فایل Excel با دو شیت می‌گیرید: همه‌ی دانشجوها با وضعیت ثبت، آیدی، یوزرنیم و زمان ثبت (به وقت تهران)، و لیست جدای <b>ثبت‌نشده‌ها</b>. لیست ثبت‌نشده‌ها برای پیگیری و اطلاع‌رسانی مفید است.</p>
+
+  <h3>گزارش لحظه‌ای ثبت‌ها: <code>/set_report</code></h3>
+  <p>ربات هر ثبت، هر قفل و هر کار ادمین را گزارش می‌دهد. اگر چیزی تنظیم نشده باشد، این گزارش‌ها به پیوی ادمین‌های اصلی می‌رود. برای اینکه گزارش‌ها به یک <b>گروه خصوصی ادمین‌ها</b> برود:</p>
+  <ol>
+    <li>ربات را به گروه ادمین‌ها اضافه کنید.</li>
+    <li>در همان گروه، خودتان <code>/set_report</code> را بفرستید.</li>
+  </ol>
+  <div class="chat">
+    <div class="chat-title">نمونه‌ی گزارش ثبت</div>
+    <div class="msg bot"><span class="who">ربات</span>✅ ثبت: کد ۴۰۰۱۱۱۲۲۲۳، رضایی - علی، Ali، ‎@ali_rz، id 123456789</div>
+  </div>
+  <p>برای برگرداندن گزارش‌ها به پیوی ادمین‌های اصلی: <code>/set_report off</code></p>
+  <div class="note danger"><b>هرگز</b> گزارش را به یک گروه عمومی یا خود گروه دانشجوها نفرستید. گزارش‌ها کد و نام دانشجوها را دارند. ربات اجازه نمی‌دهد گروه اصلی دانشجوها محل گزارش باشد.</div>
+
+  <h3>تاریخچه‌ی کارهای ادمین‌ها: <code>/logs</code></h3>
+  <p><code>/logs</code> بیست کار آخر ادمین‌ها را نشان می‌دهد. با <code>/logs 50</code> پنجاه کار آخر را می‌بینید (حداکثر ۱۰۰).</p>
+</section>
+
+<section id="settings">
+  <h2>۷. تنظیمات</h2>
+  <p>همه‌ی تنظیمات فعلی را با <code>/settings</code> ببینید.</p>
+
+  <h3>پیام تماس: <code>/set_contact</code></h3>
+  <p>این متن را دانشجویی می‌بیند که کدش پیدا نشده، کدش را کس دیگری ثبت کرده یا بن شده است. یک نفر یا بخش واقعی را بنویسید:</p>
+  <div class="copy"><pre>/set_contact اگر دانشجوی جدید هستید یا کدتان را نمی‌دانید به @edu_office پیام بدهید (آقای احمدی، آموزش دانشکده).</pre><button type="button">کپی</button></div>
+  <ul>
+    <li><code>/set_contact</code> بدون متن: نمایش متن فعلی</li>
+    <li><code>/set_contact reset</code>: برگشت به متن پیش‌فرض</li>
+  </ul>
+
+  <h3>مهلت ثبت: <code>/set_deadline</code></h3>
+  <p>اگر عضو جدید تا این مدت ثبت نکند، از گروه بیرون می‌رود. بیرون رفتن دائمی نیست و می‌تواند با لینک دوباره بیاید.</p>
+  <div class="copy"><pre>/set_deadline 48</pre><button type="button">کپی</button></div>
+  <p>عدد بر حسب ساعت است، از ۱ تا ۷۲۰ (۳۰ روز). <code>/set_deadline 0</code> بیرون کردن را کامل خاموش می‌کند. در این حالت ثبت‌نکرده‌ها فقط نمی‌توانند بنویسند.</p>
+
+  <h3>تعداد تلاش و مدت قفل: <code>/set_attempts</code></h3>
+  <div class="copy"><pre>/set_attempts 5 60</pre><button type="button">کپی</button></div>
+  <p>یعنی بعد از ۵ تلاش اشتباه، ۶۰ دقیقه قفل. تعداد تلاش بین ۱ تا ۲۰ و مدت قفل بین ۱ تا ۱۰۰۸۰ دقیقه (یک هفته) است.</p>
+</section>
+
+<section id="admins">
+  <h2>۸. مدیریت ادمین‌ها</h2>
+  <p>دو نوع ادمین داریم:</p>
+  <div class="table-box"><table>
+    <thead><tr><th>نوع</th><th>چطور ادمین می‌شود</th><th>چه کارهایی می‌تواند بکند</th></tr></thead>
+    <tbody>
+      <tr><td><b>ادمین اصلی</b></td><td>آیدی‌اش در فایل تنظیمات سرور (<code>.env</code>) نوشته شده</td><td>همه‌ی کارها، به‌علاوه‌ی اضافه و حذف کردن ادمین</td></tr>
+      <tr><td><b>ادمین معمولی</b></td><td>ادمین اصلی با <code>/add_admin</code> اضافه‌اش کرده</td><td>همه‌ی کارها به‌جز اضافه یا حذف ادمین</td></tr>
+    </tbody>
+  </table></div>
+  <div class="copy"><pre>/add_admin 123456789</pre><button type="button">کپی</button></div>
+  <div class="copy"><pre>/remove_admin 123456789</pre><button type="button">کپی</button></div>
+  <p><code>/admins</code> لیست همه‌ی ادمین‌ها را نشان می‌دهد. شخص جدید باید آیدی عددی‌اش را از <code>@userinfobot</code> بگیرد و به شما بدهد. بعد از اضافه شدن، یک بار <code>/start</code> بزند.</p>
+  <div class="note warn"><b>نکته:</b> ادمین ربات بودن با ادمین گروه بودن فرق دارد. ادمین ربات به دستورهای این راهنما دسترسی دارد. ادمین گروه فقط از قانون ثبت کد معاف است.</div>
+</section>
+
+<section id="danger">
+  <h2>۹. بکاپ و پاک کردن لیست</h2>
+  <p>ربات هر روز و هر بار که روشن می‌شود خودکار بکاپ می‌گیرد. ۳۰ بکاپ آخر نگه داشته می‌شود. قبل از «جایگزینی کامل» و قبل از پاک کردن لیست هم بکاپ گرفته می‌شود.</p>
+  <ul>
+    <li><code>/backup</code>: یک بکاپ تازه می‌گیرد و فایلش را برایتان می‌فرستد. خوب است گاهی آن را جای امنی نگه دارید.</li>
+    <li><code>/clear_list</code>: کل لیست را پاک می‌کند. ربات اول تعداد را نشان می‌دهد و تأیید دوم می‌خواهد.</li>
+  </ul>
+  <div class="chat">
+    <div class="msg me"><span class="who">ادمین</span><span class="ltr">/clear_list</span></div>
+    <div class="msg bot"><span class="who">ربات</span>⚠️ مطمئنید؟ همه‌ی ۵۲۲ کد از لیست پاک می‌شود و ۳۴۱ نفرِ ثبت‌شده محدود می‌شوند.
+قبلش بکاپ گرفته می‌شود.<div class="btns"><span>✅ بله، پاک کن</span><span>❌ لغو</span></div></div>
+  </div>
+  <div class="note danger"><b>توجه:</b> پاک کردن لیست باعث می‌شود همه‌ی ثبت‌شده‌ها دیگر نتوانند در گروه بنویسند. برای عوض کردن لیست در ترم جدید، <b>به‌جای پاک کردن، فایل جدید را با «جایگزینی کامل» بفرستید</b>. این‌طوری دانشجوهایی که هنوز در لیست هستند ثبتشان باقی می‌ماند.</div>
+</section>
+
+<section id="all">
+  <h2>۱۰. خلاصه‌ی همه‌ی دستورها</h2>
+  <div class="table-box"><table>
+    <thead><tr><th>دستور</th><th>کار</th><th>مثال</th></tr></thead>
+    <tbody>
+      <tr><td colspan="3"><b>لیست دانشجوها</b></td></tr>
+      <tr><td>ارسال فایل</td><td>وارد کردن Excel یا CSV، افزودن یا جایگزینی</td><td>—</td></tr>
+      <tr><td><code>/add</code></td><td>افزودن کد (با نام یا بدون نام)</td><td><code>/add 4001112223</code></td></tr>
+      <tr><td><code>/remove</code></td><td>حذف کد</td><td><code>/remove 4001112223</code></td></tr>
+      <tr><td><code>/clear_list</code></td><td>پاک کردن کل لیست</td><td>—</td></tr>
+      <tr><td><code>/export</code></td><td>خروجی Excel</td><td>—</td></tr>
+      <tr><td><code>/backup</code></td><td>دریافت بکاپ</td><td>—</td></tr>
+      <tr><td colspan="3"><b>دانشجوها</b></td></tr>
+      <tr><td><code>/whois</code></td><td>وضعیت با کد، یوزرنیم یا آیدی</td><td><code>/whois @ali_rz</code></td></tr>
+      <tr><td><code>/unbind</code></td><td>آزاد کردن کد از اکانت فعلی</td><td><code>/unbind 4001112223</code></td></tr>
+      <tr><td><code>/verify_user</code></td><td>وصل کردن دستی اکانت به کد</td><td><code>/verify_user 123456789 4001112223</code></td></tr>
+      <tr><td><code>/unlock</code></td><td>باز کردن قفل تلاش‌ها</td><td><code>/unlock 123456789</code></td></tr>
+      <tr><td><code>/stats</code></td><td>آمار ثبت‌نام</td><td>—</td></tr>
+      <tr><td colspan="3"><b>تنظیمات</b></td></tr>
+      <tr><td><code>/settings</code></td><td>نمایش تنظیمات</td><td>—</td></tr>
+      <tr><td><code>/set_contact</code></td><td>متن تماس برای کد پیدانشده</td><td><code>/set_contact ...</code></td></tr>
+      <tr><td><code>/set_deadline</code></td><td>مهلت ثبت (ساعت، ۰ = خاموش)</td><td><code>/set_deadline 24</code></td></tr>
+      <tr><td><code>/set_attempts</code></td><td>تعداد تلاش و دقیقه‌ی قفل</td><td><code>/set_attempts 5 60</code></td></tr>
+      <tr><td><code>/set_report</code></td><td>محل گزارش‌ها</td><td><code>/set_report off</code></td></tr>
+      <tr><td colspan="3"><b>ادمین‌ها و سوابق</b></td></tr>
+      <tr><td><code>/admins</code></td><td>لیست ادمین‌ها</td><td>—</td></tr>
+      <tr><td><code>/add_admin</code></td><td>افزودن ادمین (فقط ادمین اصلی)</td><td><code>/add_admin 123456789</code></td></tr>
+      <tr><td><code>/remove_admin</code></td><td>حذف ادمین (فقط ادمین اصلی)</td><td><code>/remove_admin 123456789</code></td></tr>
+      <tr><td><code>/logs</code></td><td>کارهای اخیر ادمین‌ها</td><td><code>/logs 50</code></td></tr>
+      <tr><td><code>/help</code></td><td>راهنمای داخل ربات</td><td>—</td></tr>
+    </tbody>
+  </table></div>
+</section>
+
+<section id="faq">
+  <h2>۱۱. سؤال‌های رایج</h2>
+  <h3>اعضای قدیمی گروه هم باید ثبت کنند؟</h3>
+  <p>بله. هر عضوی که ثبت نکرده، با اولین پیامی که بدهد محدود می‌شود و دکمه‌ی ثبت را می‌بیند. ربات نمی‌تواند لیست همه‌ی اعضا را از تلگرام بگیرد. پس عضوی که هیچ‌وقت پیام ندهد شناسایی نمی‌شود. بهتر است یک اطلاعیه در گروه بگذارید که همه از طریق ربات ثبت کنند.</p>
+  <h3>چرا برای بعضی‌ها پیام راهنما در گروه نیامد؟</h3>
+  <p>برای اینکه گروه شلوغ نشود، ربات حداکثر هر ۲۰ ثانیه یک پیام راهنما می‌فرستد و پیام قبلی را پاک می‌کند. دانشجو می‌تواند مستقیم به پیوی ربات برود و <code>/start</code> را بزند.</p>
+  <h3>دانشجو اکانت تلگرامش را عوض کرده</h3>
+  <p><code>/unbind</code> روی کدش بزنید و بگویید با اکانت جدید کد را بفرستد (سناریوی ب).</p>
+  <h3>ربات در گروه کار نمی‌کند</h3>
+  <p>مطمئن شوید ربات <b>ادمین گروه</b> است و این دسترسی‌ها را دارد: «حذف پیام‌ها»، «محدود کردن اعضا (Ban users)» و «دعوت کاربران». اگر دسترسی کم باشد، ربات به ادمین‌های اصلی هشدار می‌دهد. اگر ربات اصلاً جواب نمی‌دهد، احتمالاً روی سرور خاموش است و باید به مسئول فنی خبر بدهید.</p>
+  <h3>گروه روی «تأیید درخواست عضویت» است</h3>
+  <p>عالی است. ربات به کسی که درخواست عضویت داده پیام می‌دهد که کدش را بفرستد، و بعد از ثبت، درخواستش را خودش قبول می‌کند. فقط ربات باید دسترسی «دعوت کاربران» را داشته باشد.</p>
+</section>
+
+<footer>راهنمای ادمین ربات احراز هویت دانشجویان · نسخه‌ی ۰٫۱ · همه‌ی کدها، نام‌ها و آیدی‌های این راهنما ساختگی‌اند.</footer>
+</div>
+
+<script>
+document.querySelectorAll('.copy button').forEach(function (btn) {
+  btn.addEventListener('click', function () {
+    var pre = btn.parentElement.querySelector('pre');
+    var text = pre.textContent;
+    var done = function () { btn.textContent = 'کپی شد'; setTimeout(function () { btn.textContent = 'کپی'; }, 1500); };
+    var fallback = function () {
+      var r = document.createRange(); r.selectNodeContents(pre);
+      var s = window.getSelection(); s.removeAllRanges(); s.addRange(r);
+      btn.textContent = 'انتخاب شد';
+    };
+    try {
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(text).then(done, fallback);
+      } else { fallback(); }
+    } catch (e) { fallback(); }
+  });
+});
+</script>
