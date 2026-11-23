@@ -1,0 +1,17 @@
+.env
+.env.*
+!.env.example
+*.db
+*.db-journal
+*.db-wal
+*.db-shm
+backups/
+logs/
+# student lists and exports (personal data)
+*.xlsx
+*.xlsm
+*.csv
+__pycache__/
+*.pyc
+.venv/
+.pytest_cache/
